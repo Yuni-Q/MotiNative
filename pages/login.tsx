@@ -1,11 +1,14 @@
 
-import { GoogleSignin, GoogleSigninButton, statusCodes, User } from '@react-native-community/google-signin';
-import React, { useState } from 'react';
+import { GoogleSignin, GoogleSigninButton, statusCodes } from '@react-native-community/google-signin';
+import axios from 'axios';
+import React from 'react';
 import { Image, Text, View } from 'react-native';
 import styled from 'styled-components/native';
+import motiLogo from '../assets/images/motiLogo.png';
 import { StyledWrapper } from '../components/style/StyledComponent';
-import motiLogo from '../static/assets/images/motiLogo.png';
-import axios from 'axios';
+import { useContextDispatch } from '../utils/Context';
+import Storage from '../utils/Storage';
+
 
 GoogleSignin.configure({
   // scopes: ['https://www.googleapis.com/auth/drive.readonly'], // what API you want to access on behalf of the user, default is email and profile
@@ -41,7 +44,7 @@ const StyledAppleLoginButton = styled.View`
 `;
 
 const Login: React.FC = () => {
-	const [userInfo, setuserInfo] = useState({} as User);
+	const dispatch = useContextDispatch();
 	const signIn = async () => {
 		try {
 			await GoogleSignin.hasPlayServices();
@@ -54,9 +57,14 @@ const Login: React.FC = () => {
 					headers: { Authorization: tokenObj.accessToken },
 				},
 			);
-			const token = result.data.data.accessToken;
-			console.log('token',token)
-			// setuserInfo(userInfo);
+			const newToken = result.data.data.accessToken;
+			console.log('token',newToken)
+			
+			await Storage.setToken(newToken);
+			dispatch({
+				type: 'SET_TOKEN',
+				token: newToken,
+			});
 		} catch (error) {
 			console.log('error',error)
 			if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -73,7 +81,7 @@ const Login: React.FC = () => {
 	return (
 		<StyledWrapper>
 			<View>
-				<Image source={motiLogo} />
+				<Image source={motiLogo} style={{width: '50%'}} />
 			</View>
 			<GoogleSigninButton
 				style={{ width: 192, height: 48 }}
@@ -91,4 +99,4 @@ const Login: React.FC = () => {
 	);
 };
 
-export default Login;
+export default  Login ;
